@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import { QueryClient, useQueryClient } from "@tanstack/react-query";
 import apiClient from "../api/apiClient";
 import { authService } from "../services/authService";
 
@@ -31,6 +32,7 @@ export const AuthProvider = ({children})=>{
     const handleAuthSuccess = (userData,token) =>{
         localStorage.setItem('token',token);
         setUser(userData);
+        QueryClient.invalidateQueries();
     };
 
     const register = async (name,email,password) => {
@@ -55,6 +57,7 @@ export const AuthProvider = ({children})=>{
 
     const resetPassword = async (token,newPassword) =>{
         const data = await authService.resetPassword(token,newPassword);
+        logout();
         return data;
     }
 
