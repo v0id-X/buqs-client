@@ -1,3 +1,28 @@
+<<<<<<< HEAD
+# Curious Reader Hub
+
+A modern React frontend for discovering and tracking books.
+
+## Stack
+
+- React
+- Vite
+- TailwindCSS
+- shadcn/ui
+- React Query
+
+## Development
+
+```bash
+npm install
+npm run dev
+```
+
+## Build
+
+```bash
+npm run build
+=======
 # buqs-client
 
 The frontend for **buqs** — a book discovery and personalised reading platform. Built as a fully client-rendered React SPA, this app puts a thoughtfully designed, performant interface on top of an intelligent backend: multi-mode book feeds, real-time fuzzy autocomplete, a personal reading library, notes, star ratings, genre browsing, and a personalised "For You" page that updates as you read and rate. Light and dark mode are both first-class citizens.
@@ -342,4 +367,5 @@ npm test           # Run tests
 
 ```
 VITE_BACKEND_URL=https://your-backend-url/api
+>>>>>>> 3b7bbfc575a473ccae7774cdf0c2d30a47c2c566
 ```

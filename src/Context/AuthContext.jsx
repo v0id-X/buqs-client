@@ -1,5 +1,8 @@
 import { createContext, useContext, useState, useEffect } from "react";
+<<<<<<< HEAD
+=======
 import { QueryClient, useQueryClient } from "@tanstack/react-query";
+>>>>>>> 3b7bbfc575a473ccae7774cdf0c2d30a47c2c566
 import apiClient from "../api/apiClient";
 import { authService } from "../services/authService";
 
@@ -33,7 +36,14 @@ export const AuthProvider = ({children})=>{
     const handleAuthSuccess = (userData,token) =>{
         localStorage.setItem('token',token);
         setUser(userData);
+<<<<<<< HEAD
         queryClient.invalidateQueries();
+=======
+<<<<<<< HEAD
+=======
+        QueryClient.invalidateQueries();
+>>>>>>> 3b7bbfc575a473ccae7774cdf0c2d30a47c2c566
+>>>>>>> 17de7513e2d35ecfbbcc7c4b9263423c72c4eefd
     };
 
     const register = async (name,email,password) => {
@@ -58,7 +68,10 @@ export const AuthProvider = ({children})=>{
 
     const resetPassword = async (token,newPassword) =>{
         const data = await authService.resetPassword(token,newPassword);
+<<<<<<< HEAD
+=======
         logout();
+>>>>>>> 3b7bbfc575a473ccae7774cdf0c2d30a47c2c566
         return data;
     }
 

@@ -1,5 +1,9 @@
 import * as Switch from '@radix-ui/react-switch';
+<<<<<<< HEAD
+import { useSettings } from '../context/SettingsContext';
+=======
 import { useSettings } from '../Context/SettingsContext';
+>>>>>>> 3b7bbfc575a473ccae7774cdf0c2d30a47c2c566
 
 export const SafeModeToggle = () => {
     const { isSafeMode, toggleSafeMode } = useSettings();
