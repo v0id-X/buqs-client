@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 
-const STORAGE_KEY = "bookly:library:v1";
+const STORAGE_KEY = "buqs:library:v1";
 
 const defaultState = {
   reading: [],

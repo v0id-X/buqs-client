@@ -6,6 +6,7 @@ import { authService } from "../services/authService";
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({children})=>{
+    const queryClient = useQueryClient();
     const [user,setUser] = useState(null);
     const [loading,setLoading] = useState(true);
 
@@ -32,7 +33,7 @@ export const AuthProvider = ({children})=>{
     const handleAuthSuccess = (userData,token) =>{
         localStorage.setItem('token',token);
         setUser(userData);
-        QueryClient.invalidateQueries();
+        queryClient.invalidateQueries();
     };
 
     const register = async (name,email,password) => {
@@ -47,7 +48,7 @@ export const AuthProvider = ({children})=>{
 
     const googleAuth = async (googleToken) => {
         const data = await authService.googleAuth(googleToken);
-        handleAuthSuccess(data.user,data.jwtToken);
+        handleAuthSuccess(data.user,data.jwtToken); 
     };
 
     const forgotPassword = async (email)=>{

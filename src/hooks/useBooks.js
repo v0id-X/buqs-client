@@ -49,17 +49,7 @@ export const useTrendingBooks = () => {
     });
 };
 
-export const useTopSearchedBooks = () => {
-    const { isSafeMode } = useSettings();
 
-    return useQuery({
-        queryKey: ['books', 'top-searched', { safe: isSafeMode }],
-        queryFn: () => bookService.getTopSearchedBooks({ safe_mode: isSafeMode }),
-        staleTime: 10 * 60 * 1000,
-    });
-};
-
-// Direct ISBN lookups don't need the safe mode flag
 export const getBookByIsbn = (isbn) => {
     return useQuery({
         queryKey: ['book', isbn],

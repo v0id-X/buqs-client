@@ -18,10 +18,38 @@ import { useAuth } from "./Context/AuthContext.jsx";
 import SearchResults from "./pages/SearchResults.jsx";
 import ForYou from "./pages/ForYou.jsx";
 
+const AppLoadingSkeleton = () => (
+  <div className="min-h-screen bg-slate-50 dark:bg-[#0f111a] flex flex-col p-6 animate-pulse transition-colors duration-300">
+    <div className="flex justify-between items-center mb-8">
+      <div className="w-10 h-10 bg-slate-200 dark:bg-slate-800 rounded-full"></div>
+      <div className="w-24 h-8 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
+    </div>
+    
+    <div className="w-48 h-10 bg-slate-200 dark:bg-slate-800 rounded-md mb-6"></div>
+
+    <div className="flex gap-3 mb-8">
+      <div className="w-32 h-10 bg-slate-200 dark:bg-slate-800 rounded-full"></div>
+      <div className="w-24 h-10 bg-slate-200 dark:bg-slate-800 rounded-full"></div>
+    </div>
+
+    <div className="flex flex-col gap-4">
+      {[1, 2, 3, 4].map((i) => (
+        <div key={i} className="flex gap-4 items-center">
+          <div className="w-20 h-28 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
+          <div className="flex flex-col gap-2 flex-1">
+            <div className="w-3/4 h-5 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
+            <div className="w-1/2 h-4 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
 
-  if (loading) return <div className="h-screen flex items-center justify-center">Loading....</div>;
+  if (loading) return <AppLoadingSkeleton />;
 
   return user ? children : <Navigate to="/auth" />;
 };

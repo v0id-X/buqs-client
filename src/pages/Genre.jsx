@@ -30,7 +30,7 @@ const Genre = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   const exactGenre = SLUG_MAP[slug] || slug.replace(/-/g, " ");
-  const sort = searchParams.get("sort") || "top_rated";
+  const sort = searchParams.get("sort") || "discovery";
 
   const feedQuery = useInfiniteFeed({ sort, genre: exactGenre });
   
@@ -45,10 +45,10 @@ const Genre = () => {
   }, [feedQuery.data]);
 
   useEffect(() => {
-    if (inView && feedQuery.hasNextPage && !feedQuery.isFetchingNextPage) {
+    if (inView && feedQuery.hasNextPage && !feedQuery.isFetchingNextPage && !feedQuery.isLoading) {
       feedQuery.fetchNextPage();
     }
-  }, [inView, feedQuery.hasNextPage, feedQuery.isFetchingNextPage, feedQuery]);
+  }, [inView, feedQuery.hasNextPage, feedQuery.isFetchingNextPage, feedQuery.isLoading, feedQuery]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -80,8 +80,6 @@ const Genre = () => {
 
   return (
     <AppLayout>
-      
-
       <header className="mb-8">
         <p className="text-sm font-semibold text-muted-foreground tracking-widest uppercase mb-2">Genre</p>
         <h1 className="text-4xl font-extrabold capitalize mb-3">{exactGenre}</h1>

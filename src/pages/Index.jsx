@@ -32,10 +32,10 @@ const Index = () => {
   });
 
   useEffect(() => {
-      if (inView && feedQuery.hasNextPage && !feedQuery.isFetchingNextPage) {
+      if (inView && feedQuery.hasNextPage && !feedQuery.isFetchingNextPage && !feedQuery.isLoading) {
           feedQuery.fetchNextPage();
       }
-  }, [inView, feedQuery.hasNextPage, feedQuery.isFetchingNextPage, feedQuery]);
+  }, [inView, feedQuery.hasNextPage, feedQuery.isFetchingNextPage, feedQuery.isLoading, feedQuery]);
 
   useEffect(() => {
       const handleScroll = () => {

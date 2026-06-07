@@ -18,10 +18,10 @@ const ForYou = () => {
   });
 
   useEffect(() => {
-      if (inView && hasNextPage && !isFetchingNextPage) {
+      if (inView && hasNextPage && !isFetchingNextPage && !isLoading) {
           fetchNextPage();
       }
-  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }, [inView, hasNextPage, isFetchingNextPage, isLoading, fetchNextPage]);
 
   useEffect(() => {
       const handleScroll = () => {

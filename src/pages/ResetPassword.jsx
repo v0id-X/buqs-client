@@ -53,11 +53,11 @@ const ResetPassword = () => {
           <ArrowLeft className="w-4 h-4" /> Back to sign in
         </Link>
 
-        <div className="flex items-center gap-2 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center">
-            <BookOpen className="w-5 h-5" />
-          </div>
-          <span className="font-extrabold text-xl">Bookly</span>
+        <div className="flex items-center gap-2 mb-8">
+            <Logo className="w-7 h-7 sm:w-8 sm:h-8 dark:invert transition-all" />
+          <span className="font-serif italic text-3xl sm:text-4xl font-bold tracking-tight leading-none">
+              Buqs
+            </span>
         </div>
 
         <h1 className="text-2xl font-extrabold mb-1">Set a new password</h1>

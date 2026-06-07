@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useAuth } from "../Context/AuthContext";
 import { GoogleLogin } from "@react-oauth/google";
 import { authService } from "../services/authService";
+import Logo from "@/assets/bookshelf2.svg?react";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -64,12 +65,12 @@ const Auth = () => {
       <div className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-gradient-purple opacity-20 blur-3xl" />
 
       <div className="relative w-full max-w-md bg-card rounded-3xl shadow-card p-8 md:p-10">
-        <Link to="/" className="flex items-center gap-2 mb-8">
-          <div className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center">
-            <BookOpen className="w-5 h-5" />
-          </div>
-          <span className="font-extrabold text-xl">Bookly</span>
-        </Link>
+        <div className="flex items-center gap-2 mb-8">
+            <Logo className="w-7 h-7 sm:w-8 sm:h-8 dark:invert transition-all" />
+          <span className="font-serif italic text-3xl sm:text-4xl font-bold tracking-tight leading-none">
+              Buqs
+            </span>
+        </div>
 
         <Tabs value={tab} onValueChange={(v) => setTab(v )} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6 rounded-full">
@@ -123,7 +124,7 @@ const Auth = () => {
             onError={()=>toast.error('Google popup failed or closed')}
             theme="outline"
             shape="pill"
-            width='350'
+            width='320'
             text="continue_with"
             />
           </div>
@@ -179,7 +180,7 @@ const Auth = () => {
               theme="outline"
               size="large"
               shape="pill"
-              width="350"
+              width="320"
               text="continue_with"
               />
             </div>
