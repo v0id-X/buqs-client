@@ -29,27 +29,10 @@ export const bookService = {
         return response.data;
     },
 
-    getTopSearchedBooks: async (params) => {
-        const response = await apiClient.get('/books/top-searched', { params });
-        return response.data;
-    },
-
-    getTop100: async (params) => {
-        const response = await apiClient.get('/books/top100', { params });
-        return response.data;
-    },
-
     autoCompleteBooks: async (query, safe_mode) => {
         if(!query || query.length < 2) return [];
         const response = await apiClient.get('/books/autocomplete', {
             params: { query, safe_mode }
-        });
-        return response.data;
-    },
-
-    getMoreFromAuthor: async (isbn, safe_mode) => {
-        const response = await apiClient.get(`/books/${isbn}/more-by-author`, {
-            params: { safe_mode }
         });
         return response.data;
     },
