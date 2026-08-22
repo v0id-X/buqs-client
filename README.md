@@ -1,127 +1,248 @@
-# buqs-client
+# BUQS Client
 
-The frontend for **Buqs** — a personalized book discovery app. Built with React 18 and Vite, it's the client half of a full-stack project where the interesting engineering happens on both sides of the wire: the backend computes personalized recommendations and trending scores, and this app is built to consume that efficiently — infinite-scrolling feeds, debounced search-as-you-type, optimistic UI updates, and URL-driven filter state, all wired through React Query rather than hand-rolled fetch/loading logic.
+The React frontend for **BUQS**, a personalized book discovery app. The client is designed as the other half of a performance-conscious system: the backend provides cursor-paginated feeds, precomputed recommendations, and structured Librarian answers; the UI consumes them through cached queries, optimistic updates, responsive skeletons, and a consistent reading-focused design.
 
----
+## BUQS Librarian demo
 
-## What's inside
+<video src="./Buqs-Librarian-Demo.mp4" controls muted playsinline width="100%"></video>
 
-- Infinite-scroll book feeds (Discovery, For You, Trending, Search) powered by React Query's infinite queries against the backend's cursor-paginated API
-- Debounced, portal-rendered autocomplete search with keyboard navigation and click-outside handling
-- Optimistic UI updates for library status changes and ratings — the interface updates instantly, before the network request even resolves
-- URL-driven filter state — sort order and genre filters live in the query string via `useSearchParams`, so filtered views are shareable links and survive a page refresh or back-button press
-- Google OAuth sign-in alongside email/password auth, with silent session restoration on page load
-- Full dark mode with persisted preference
-- A "Safe Mode" content filter, persisted client-side and threaded through every single data-fetching hook
-- Personal library (wishlist/reading/finished), notes with search, and a 1–5 star rating system
-- Responsive, custom-designed UI built on shadcn/ui + Tailwind — not a default component-library look
-- CI/CD to Azure Static Web Apps, with automatic PR preview environments
+[Watch or download the BUQS Librarian demo](./Buqs-Librarian-Demo.mp4)
 
----
 
-## Architecture
+## Highlights
 
-### Data fetching: React Query, not ad-hoc `useEffect` + `fetch`
+- Infinite Discovery, For You, Trending, search, genre, and library views driven by cursor-based React Query infinite queries
+- Debounced autocomplete with keyboard navigation and a portal-rendered dropdown
+- Optimistic library and rating updates with background reconciliation
+- URL-driven sort and genre filters that survive refreshes and can be shared
+- Email/password and Google OAuth with protected routes and session restoration
+- Persistent dark mode and Safe Mode settings
+- Personal library, notes, immutable one-to-five star ratings, and book detail views
+- The Librarian chat for books, notes, reading history, and conversational follow-ups
+- Structured chat cards with real cover images, author names, book routes, note routes, response skeletons, and accessible empty states
+- Responsive Tailwind and shadcn/ui interface with a consistent light and dark visual system
 
-Every piece of server data in this app — feeds, search, library, notes, ratings — goes through **TanStack Query**, not manual `useEffect`/`useState` fetch logic. This isn't just a style preference; it's what makes the following actually work correctly:
+## Client architecture
 
-- **Automatic caching with tuned staleness per data type.** Similar-books results are cached client-side for 24 hours (matching the backend's own 24-hour Redis cache for that same data — client and server caching strategy were deliberately kept in sync). A user's own rating on a book is cached indefinitely (`staleTime: Infinity`) since the backend enforces ratings as immutable — the client's cache policy directly reflects a business rule enforced on the server.
-- **Infinite queries for every paginated feed.** `useInfiniteQuery` combined with `react-intersection-observer` powers real infinite scroll — an invisible sentinel element at the bottom of the list triggers `fetchNextPage()` when it enters the viewport, which reads the `nextCursor` the backend returned on the last page. This lines up directly with the backend's keyset pagination design — the client never guesses an offset, it just forwards whatever cursor the API gave it.
-- **Optimistic cache updates on mutation.** Updating a book's library status or submitting a rating calls `queryClient.setQueryData()` immediately in the mutation's `onSuccess`, so the UI reflects the change instantly, with `invalidateQueries()` alongside it to reconcile with the server in the background.
-
-### Auth: JWT in an Axios interceptor, not manually attached per-request
-
-```javascript
-apiClient.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token');
-    if (token) config.headers.Authorization = `Bearer ${token}`;
-    return config;
-});
+```mermaid
+flowchart LR
+  U[Reader] --> P[React pages and components]
+  P --> Q[TanStack Query hooks]
+  Q --> S[API services]
+  S --> A[Axios client]
+  A --> B[BUQS Express API]
+  C[Auth, theme, settings, search contexts] --> P
+  Q --> Cache[Query cache]
 ```
-Every API call automatically carries the JWT — no service function has to remember to attach it. Session state is restored on page load by calling `/users/me` with whatever token is in storage; an invalid/expired token is caught and cleared automatically, falling back to the logged-out state rather than getting stuck.
 
-### Filter state lives in the URL, not component state
+## Data flow
 
-Sort order and genre filters are read from and written to `useSearchParams`, not `useState`. That means:
-- Filtered/sorted views are shareable — copy the URL, send it to someone, they see the same filtered feed
-- Refreshing the page doesn't reset your filters
-- Browser back/forward navigates through filter changes naturally, for free
+```mermaid
+sequenceDiagram
+  participant U as Reader
+  participant V as View
+  participant Q as React Query
+  participant A as API client
+  participant B as Backend
 
-### Search: debounce for autocomplete, explicit submit for full results
+  U->>V: Scroll, search, save, rate, or ask
+  V->>Q: Use query or mutation hook
+  Q->>A: Request with cached state where valid
+  A->>B: JWT-authenticated API request
+  B-->>A: Cursor, book data, note data, or chat payload
+  A-->>Q: Structured response
+  Q-->>V: Cached render, skeleton, empty state, or result card
+  V-->>U: Immediate feedback
+```
 
-The search box separates two concerns that are easy to conflate: a debounced value (300ms) drives the lightweight autocomplete dropdown as you type, while full search results only run against a separately-tracked "submitted" query — so autocomplete doesn't spam the backend on every keystroke, but committing a search still feels instant once you actually hit enter.
+## Why TanStack Query
 
-### The autocomplete dropdown is a React Portal
+Server state is handled through TanStack Query rather than ad-hoc `useEffect` and `fetch` calls. This makes loading, error, retry, cache invalidation, and pagination behave consistently across the app.
 
-Rather than rendering the suggestions dropdown inline (where it can get clipped by a parent's `overflow: hidden` or fight with `z-index` stacking), it's rendered via `ReactDOM.createPortal` directly onto `document.body`, with its position calculated manually from the input's bounding rect and kept in sync on scroll/resize. It's a small detail, but it's the kind of thing that only comes up once you've actually hit the clipping/stacking problem in a real layout.
+- Infinite queries forward the backend’s `nextCursor`; the client never invents an offset.
+- Similar-book results use a 24-hour client cache aligned with the backend cache policy.
+- Immutable user ratings use an infinite stale time because the backend does not permit re-rating.
+- Library and rating mutations update the query cache optimistically, then invalidate the relevant query to reconcile safely.
 
----
+## Search, filters, and navigation
 
-## Tech Stack
+Search deliberately separates autocomplete from committed search. A 300 ms debounced query drives lightweight suggestions while a submitted query controls the full result page. The suggestion menu renders through a React portal so it is not clipped by layout overflow or trapped in a stacking context.
 
-| Layer | Technology |
+Genre and sort filters live in `useSearchParams`, not transient component state. A URL can therefore restore a filtered view after refresh, be shared, and work correctly with browser history.
+
+## The Librarian interface
+
+The Librarian is a focused chat surface rather than a generic messenger. It supports discovery questions, personal history, notes, book details, and natural follow-ups such as `this`, `that`, `these`, `more by him`, and `something else`.
+
+### Librarian client architecture
+
+```mermaid
+flowchart LR
+  U[Reader] --> L[Librarian page]
+  L --> MS[Message state]
+  L --> CO[Composer]
+  CO --> LS[librarianService]
+  LS --> AX[Axios API client]
+  AX --> API[POST /api/librarian/chat]
+  API --> AX
+  AX --> LS
+  LS --> NM[Normalized chat payload]
+  NM --> LM[LibrarianMessage]
+  LM --> BC[Book cards]
+  LM --> NC[Note cards]
+  BC --> BR[/books/:isbn]
+  NC --> NR[/notes/:id]
+```
+
+The page owns the conversation ID and sends it on each follow-up. The backend then resolves active references, such as the last author or genre, without the client trying to interpret natural language. The frontend’s responsibility is narrow and predictable: submit a message, render the structured response, maintain an accessible pending state, and route readers to the selected book or note.
+
+### Librarian UI flow
+
+```mermaid
+sequenceDiagram
+  participant U as Reader
+  participant C as Composer
+  participant P as Librarian page
+  participant S as Service
+  participant B as Backend
+  participant M as Message card
+
+  U->>C: Enter prompt
+  C->>P: Submit message
+  P->>P: Append reader message and show chat skeleton
+  P->>S: sendLibrarianMessage(message, conversationId)
+  S->>B: Authenticated request
+  B-->>S: Message, books, notes, conversation ID
+  S-->>P: Normalized payload
+  P->>M: Render assistant message
+  M->>M: Render book cards with cover and author
+  M->>M: Render note cards with note icon and note link
+  P->>P: Store returned conversation ID
+```
+
+### Rendering contract and resilience
+
+The service normalizes every response into one renderable shape before it reaches message components. This prevents a common chat UI bug where initial results use a different field path than follow-up results and lose cover images.
+
+| UI concern | Implementation intent |
 |---|---|
-| Framework | React 18, Vite (SWC-based dev/build) |
-| Routing | React Router v6, including protected-route wrapping based on auth state |
-| Server state | TanStack Query (React Query) — caching, infinite queries, optimistic mutations |
-| Forms & validation | React Hook Form + Zod |
-| Styling | Tailwind CSS + shadcn/ui (Radix UI primitives), custom design tokens (CSS variables for tags/tints), dark mode via class-based theming |
-| HTTP | Axios, with a request interceptor for JWT attachment |
-| Auth | JWT (email/password) + Google OAuth (`@react-oauth/google`) |
-| Icons | lucide-react |
-| Infinite scroll | `react-intersection-observer` |
-| Toasts | Sonner |
-| Deployment | Azure Static Web Apps, CI/CD via GitHub Actions with automatic PR preview environments |
+| First response and follow-ups | Both use the same normalized `books` and `notes` arrays. |
+| Covers | Book cards use `cover_image` from the structured backend response and fall back only when an image is unavailable. |
+| Authors | Book cards display the returned author string, not a generic label. |
+| Notes | Note cards use a generic note icon and route to `/notes/:id`. |
+| Pending request | The chat area shows its own skeleton while the fixed composer remains aligned and usable after completion. |
+| Failure | The request error renders as a calm, actionable assistant message rather than leaving an empty pending card. |
+| Theme | Surface, border, halo, and text tokens are theme-aware to avoid harsh light-mode borders or dark-mode corner artifacts. |
 
----
+### Client and server responsibility split
 
-## Project Structure
+The client does not attempt to resolve natural-language references locally. It persists the returned conversation ID, sends the raw follow-up text, and renders the normalized response. The server owns intent detection, reference resolution, authorization, data queries, shown-book exclusion, and fallback policy. This prevents two sources of truth for conversational state and means a refreshed client can resume a valid server-side conversation while its Redis context is alive.
 
+```mermaid
+flowchart TB
+  UI[React Librarian page] -->|message + conversationId| API[POST /api/librarian/chat]
+  API -->|message + books + notes + conversationId| UI
+  UI -->|book click| BOOK[/books/:isbn]
+  UI -->|note click| NOTE[/notes/:id]
+  UI -->|pending| SKELETON[Conversation skeleton]
+  UI -->|error| RECOVERY[Retryable assistant error state]
 ```
+
+This is especially important for the first result in a conversation. `librarianService` normalizes every response to the same book and note arrays before `LibrarianMessage` renders, so first-message cover images and author names use the same mapping as later results.
+
+The UI renders structured backend results instead of trying to infer cards from prose:
+
+- Book cards use the returned `cover_image`, title, author, and route.
+- Notes use a generic note icon and open the matching personal note.
+- The first response and every subsequent response share the same card mapping, so covers do not disappear on a first prompt.
+- The conversation area has its own skeleton state and keeps the composer stable while a request is pending.
+- The visual halo, borders, and composer are token-based so light and dark themes remain smooth and readable.
+
+## Technology
+
+| Area | Technology |
+|---|---|
+| Framework | React 18 and Vite |
+| Routing | React Router v6 |
+| Server state | TanStack Query |
+| Forms | React Hook Form and Zod |
+| Styling | Tailwind CSS, shadcn/ui, Radix UI primitives, CSS variables |
+| HTTP | Axios with a JWT request interceptor |
+| Authentication | JWT and `@react-oauth/google` |
+| Icons | lucide-react |
+| Infinite scroll | react-intersection-observer |
+| Notifications | Sonner |
+| Deployment | Azure Static Web Apps and GitHub Actions |
+
+## Project layout
+
+```text
 buqs-client/
 ├── src/
 │   ├── Context/
-│   │   ├── AuthContext.jsx       # JWT session state, login/register/OAuth/logout
-│   │   ├── BookContext.jsx       # Feed filters (URL-driven), trending + feed queries
-│   │   ├── SearchContext.jsx     # Debounced query, autocomplete, submitted search
-│   │   ├── SettingsContext.jsx   # Safe Mode toggle, persisted
-│   │   └── ThemeContext.jsx      # Dark/light mode, persisted
 │   ├── api/
-│   │   └── apiClient.js          # Axios instance + JWT request interceptor
-│   ├── services/                 # One file per backend resource — thin API wrappers
-│   ├── hooks/                    # React Query hooks — one set per resource
 │   ├── components/
-│   │   ├── ui/                   # shadcn/ui primitives
-│   │   ├── BookCard.jsx          # Deterministic per-book color tinting, lazy image load
-│   │   ├── SearchBar.jsx         # Portal-rendered autocomplete dropdown
-│   │   ├── Sidebar.jsx, AppLayout.jsx
-│   │   └── ...
-│   └── pages/                    # One component per route
-├── staticwebapp.config.json      # Azure SWA SPA fallback routing
-└── .github/workflows/            # CI/CD to Azure Static Web Apps
+│   │   ├── ui/
+│   │   ├── LibrarianComposer.jsx
+│   │   └── LibrarianMessage.jsx
+│   ├── hooks/
+│   ├── pages/
+│   │   └── Librarian.jsx
+│   ├── services/
+│   │   └── librarianService.js
+│   └── utils/
+├── staticwebapp.config.json
+└── .github/workflows/
 ```
 
----
+## Routes
 
-## Pages & Routes
-
-```
-/auth                      Login / register (email or Google)
+```text
+/auth
 /forgot-password
 /reset-password/:resetToken
-/                           Discovery feed (protected)
-/for-you                    Personalized feed (protected)
-/search                     Search results (protected)
-/notes                      Notes list (protected)
-/notes/:id                  Single note (protected)
-/books/:isbn                Book detail page (protected)
-/library                    Personal library (protected)
-/genre/:slug                Genre-filtered feed (protected)
+/
+/for-you
+/search
+/notes
+/notes/:id
+/books/:isbn
+/library
+/genre/:slug
+/librarian
 ```
-All protected routes redirect to `/auth` if there's no authenticated user, with a skeleton loading state shown while the session is being verified on initial load.
 
----
+Protected routes redirect to `/auth` when there is no authenticated user. During initial session verification, views show a skeleton instead of briefly rendering the wrong state.
 
-## Deployment
+## UI regression prompts
 
-Deployed on **Azure Static Web Apps**, with CI/CD via **GitHub Actions**: every push to `main` builds and deploys automatically, and every pull request gets its own temporary preview environment that's cleaned up when the PR closes. SPA routing is handled via `staticwebapp.config.json`'s navigation fallback, so direct links to any client-side route (e.g. `/books/9780123456789`) resolve correctly instead of 404ing.
+Use these in the Librarian screen to verify structured cards, cover handling, note links, and follow-up state.
+
+1. `What have I rated recently?`
+2. `Show me books similar to my last read`
+3. `Show some more like this`
+4. `Give me books by George Orwell`
+5. `Give me the highest rated among these books`
+6. `Give me some highly rated horror books`
+7. `Some other horror books`
+8. `Tell me about The Palace of Illusions by Chitra Banerjee Divakaruni`
+9. `Show me my notes`
+10. `Do I have a note about The Lake House?`
+
+For each book result, confirm that the card displays a cover and author and routes to `/books/:isbn`. For each matching note, confirm that its card routes to `/notes/:id`.
+
+
+## Production deployment
+
+The client deploys to Azure Static Web Apps through GitHub Actions. Pushes to `main` build and deploy the production site, while pull requests receive preview environments. `staticwebapp.config.json` provides SPA navigation fallback so direct deep links such as `/books/9780123456789` and `/librarian` resolve correctly.
+
+## Technical notes
+
+The client intentionally mirrors the backend’s performance and correctness model rather than treating API calls as isolated component concerns:
+
+- **Cursor alignment:** React Query infinite queries forward the cursor returned by PostgreSQL-backed endpoints, avoiding offset drift and duplicate scrolling work.
+- **Cache policy follows product rules:** similar books use a long-lived cache because the server also caches them; immutable ratings can safely use an infinite stale time.
+- **Mutation safety:** optimistic UI updates improve responsiveness, while cache invalidation restores the server as the source of truth.
+- **URL-as-state:** sorting and genre filters stay shareable, refresh-safe, and compatible with browser history.
+- **Accessible perceived performance:** skeletons cover session restoration, feeds, and chat responses so the app never looks frozen while data is loading.
+- **Boundary discipline:** contexts own client-side concerns such as authentication, search input, theme, and settings; React Query owns remote server state; services remain thin API wrappers.

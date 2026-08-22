@@ -17,6 +17,7 @@ import NotFound from "./pages/NotFound.jsx";
 import { useAuth } from "./Context/AuthContext.jsx";
 import SearchResults from "./pages/SearchResults.jsx";
 import ForYou from "./pages/ForYou.jsx";
+import Librarian from "./pages/Librarian.jsx";
 
 const AppLoadingSkeleton = () => (
   <div className="min-h-screen bg-slate-50 dark:bg-[#0f111a] flex flex-col p-6 animate-pulse transition-colors duration-300">
@@ -71,6 +72,7 @@ const App = () => (
           <Route path="/books/:isbn" element={<ProtectedRoute><BookDetails /></ProtectedRoute>} />
           <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
           <Route path="/genre/:slug" element={<ProtectedRoute><Genre /></ProtectedRoute>} />
+          <Route path="/librarian" element={<ProtectedRoute><Librarian /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </SidebarProvider>

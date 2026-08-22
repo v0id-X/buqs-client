@@ -3,7 +3,7 @@ import {
   Home, BookOpen, Feather, Sparkles, FlowerIcon, Library,
   MoreHorizontal, ChevronUp, PanelLeftClose, X, LogOut,
   Search as MysteryIcon, Rocket, User, Globe, Zap, Ghost, Baby, Briefcase,
-  TrendingUp, Trophy, NotebookPen, Heart, WandSparkles
+  TrendingUp, Trophy, NotebookPen, Heart, WandSparkles, Bot
 } from "lucide-react";
 import { useState } from "react";
 import { useSidebarToggle } from "@/hooks/useSidebarToggle";
@@ -15,6 +15,12 @@ const discoverItems = [
   { to: "/",        label: "Home",            icon: Home,        color: "text-foreground" },
   { to: "/for-you", label: "For You",         icon: Sparkles,    color: "text-purple-500"},
   { to: "/notes",   label: "Personal Notes",  icon: NotebookPen, color: "text-indigo-500" },
+  { to: "/librarian", label: (
+    <span className="relative inline-block pr-4">
+      Buqs Librarian 
+      <span className="absolute -top-1.5 right-0.5 text-[10px] font-bold text-stone-400">AI</span>
+    </span>
+  ), icon: BookOpen, color: "text-amber-800" }
 ];
 
 const primaryGenres = [
