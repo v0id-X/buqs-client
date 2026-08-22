@@ -115,7 +115,7 @@ const Librarian = () => {
             <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
               A quiet guide to your books, notes, and next great read.
             </p>
-              <Link to={-1} className="inline-flex items-center gap-2 text-sm text-muted-foreground mb-6 mt-4 hover:text-foreground">
+              <Link to='/' className="inline-flex items-center gap-2 text-sm text-muted-foreground mb-6 mt-4 hover:text-foreground">
           <ArrowLeft className="w-4 h-4" /> Go back
         </Link>
           </div>
